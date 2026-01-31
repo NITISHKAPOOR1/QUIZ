@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excellence Academy | Integrated Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@600&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fdfdfc;
+            --sidebar: #f8f7f2;
+            --accent: #2c3e50;
+            --gold: #c5a059;
+            --text: #1a1a1a;
+            --border: #e1e1e1;
+        }
+
+        * { transition: all 0.2s ease; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow: hidden; }
+
+        /* --- DASHBOARD LAYOUT --- */
+        #main-app { display: flex; height: 100vh; }
+        
+        nav { 
+            width: 280px; background: var(--sidebar); border-right: 1px solid var(--border); 
+            padding: 30px 20px; display: flex; flex-direction: column; overflow-y: auto; 
+        }
+        
+        .nav-item { 
+            padding: 12px 15px; margin-bottom: 4px; cursor: pointer; border-radius: 10px; 
+            color: #444; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px;
+        }
+        .nav-item.active { 
+            background: #fff; color: var(--accent); border-left: 4px solid var(--gold); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-weight: 600;
+        }
+
+        main { flex-grow: 1; overflow-y: auto; padding: 50px 70px; background: #fff; }
+        
+        /* --- TABLES --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th { background: var(--sidebar); text-align: left; padding: 15px; font-size: 13px; text-transform: uppercase; color: #888; border-bottom: 2px solid var(--gold); }
+        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .score-pill { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 15px; font-weight: 700; }
+
+        .btn-attempt { 
+            padding: 10px 20px; border: 1.5px solid var(--accent); 
+            background: none; border-radius: 8px; cursor: pointer; font-weight: 600; 
+            text-decoration: none; color: var(--accent);
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="main-app">
+    <nav>
+        <div style="font-family: 'Crimson Pro'; font-size: 24px; color: var(--gold); margin-bottom: 30px;">Academy.Admin</div>
+        
+        <div style="font-size: 11px; color: #999; margin: 20px 0 10px 10px; text-transform: uppercase;">Student View</div>
+        <div class="nav-item active" onclick="showSection('student-view', this)">📚 Test Library</div>
+        
+        <div style="font-size: 11px; color: #999; margin: 20px 0 10px 10px; text-transform: uppercase;">Administrative</div>
+        <div class="nav-item" onclick="showSection('admin-panel', this)">📊 Attempt Reports</div>
+        
+        <div class="nav-item" onclick="location.reload()" style="color: #bd2130; margin-top: auto;">Logout</div>
+    </nav>
+
+    <main>
+        <section id="student-view">
+            <h1 style="font-family: 'Crimson Pro'; font-size: 38px;">Available Assessments</h1>
+            <div id="subject-tabs">
+                <button onclick="renderTests('History')" class="btn-attempt">History</button>
+                <button onclick="renderTests('Math')" class="btn-attempt">Math</button>
+                <button onclick="renderTests('PunjabGK')" class="btn-attempt">Punjab GK</button>
+            </div>
+            <div id="test-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px;">
+                </div>
+        </section>
+
+        <section id="admin-panel" class="hidden">
+            <h1 style="font-family: 'Crimson Pro'; font-size: 38px;">Student Performance Report</h1>
+            <p style="color: #666;">This report shows all tests attempted on this device.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Subject</th>
+                        <th>Test Title</th>
+                        <th>Date/Time</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="report-body">
+                    </tbody>
+            </table>
+            <button onclick="clearReports()" style="margin-top: 20px; color: red; background: none; border: none; cursor: pointer;">Clear All Records</button>
+        </section>
+    </main>
+</div>
+
+<script>
+    // HARDLINK PROVISION
+    const testFileRegistry = {
+        'History-1': 'History/Test1.html',
+        'Math-1': 'Math/Math_Basic.html',
+        'PunjabGK-1': 'Punjab_GK/State_1.html'
+    };
+
+    function showSection(id, el) {
+        document.getElementById('student-view').classList.add('hidden');
+        document.getElementById('admin-panel').classList.add('hidden');
+        document.getElementById(id).classList.remove('hidden');
+        
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+
+        if(id === 'admin-panel') loadReports();
+    }
+
+    function renderTests(sub) {
+        const grid = document.getElementById('test-grid');
+        grid.innerHTML = '';
+        for(let i=1; i<=10; i++) {
+            const path = testFileRegistry[`${sub}-${i}`];
+            grid.innerHTML += `
+                <div style="border: 1px solid #eee; padding: 20px; border-radius: 12px;">
+                    <h3 style="font-family: 'Crimson Pro';">${sub} Test #${i}</h3>
+                    <a href="${path || '#'}" target="_blank" class="btn-attempt" style="display:block; text-align:center; ${path ? '' : 'opacity:0.3'}">
+                        ${path ? 'Attempt Now' : 'Locked'}
+                    </a>
+                </div>`;
+        }
+    }
+
+    // --- REPORTING LOGIC ---
+    function loadReports() {
+        const tbody = document.getElementById('report-body');
+        const reports = JSON.parse(localStorage.getItem('testReports') || '[]');
+        
+        tbody.innerHTML = reports.length ? '' : '<tr><td colspan="6" style="text-align:center;">No tests attempted yet.</td></tr>';
+        
+        reports.reverse().forEach(r => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${r.studentName}</b></td>
+                    <td>${r.subject}</td>
+                    <td>${r.testTitle}</td>
+                    <td>${r.date}</td>
+                    <td><span class="score-pill">${r.score}%</span></td>
+                    <td style="color:green; font-weight:600;">Completed</td>
+                </tr>`;
+        });
+    }
+
+    function clearReports() {
+        if(confirm("Delete all attempt history?")) {
+            localStorage.removeItem('testReports');
+            loadReports();
+        }
+    }
+
+    // Initialize
+    renderTests('History');
+
+    /** * NOTE FOR YOUR INDIVIDUAL TEST FILES:
+     * In your History_Test1.html etc., add this script to the "Submit" button 
+     * to send data back to this dashboard:
+     * * function submitScore(name, sub, title, score) {
+     * let logs = JSON.parse(localStorage.getItem('testReports') || '[]');
+     * logs.push({
+     * studentName: name,
+     * subject: sub,
+     * testTitle: title,
+     * date: new Date().toLocaleString(),
+     * score: score
+     * });
+     * localStorage.setItem('testReports', JSON.stringify(logs));
+     * window.close(); // Close test tab
+     * }
+     */
+</script>
+</body>
+</html>
